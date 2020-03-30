@@ -3,9 +3,10 @@ const Client = require('./network')
 
 var Service = function(options) {
     this.client = new Client(options)
+    var that = this
 
     this.send_otp = function (phone_number) {
-        return this.client.send_otp(phone_number)
+        return that.client.send_otp(phone_number)
     }
 
     // this.get_account = function(account_number, merchant_id) {

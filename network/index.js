@@ -17,7 +17,7 @@ const process_xml_response = function(xml) {
   return null
 }
 
-var Client = function(options) {
+module.exports = function(options) {
   options = _isNil(options) ? {} : options
   var FettanMerchantID = options.merchant_id || ''
 
@@ -34,7 +34,7 @@ var Client = function(options) {
   }
 
   this.pay = function (CardNumber, Amount, PIN, PaymentAction, SourceTransID, ExpirationDate, OrderDescription, SourceTransactionID) {
-    return axios.post(this.payment_url, _merge(this.common_config, {
+    const params = _merge(this.common_config, {
       CardNumber,
       Amount,
       PIN,
@@ -44,7 +44,9 @@ var Client = function(options) {
       ExpirationDate,
       OrderDescription,
       SourceTransactionID
-    })).catch(function(err) { console.log(err.response || err) })
+    })
+    return axios.get(this.payment_url, { params: params })
+        .catch(function(err) { console.log(err.response || err) })
   }
 
   this.send_otp = function(phone_number, SourceTransID ) {
@@ -90,5 +92,3 @@ var Client = function(options) {
   //   }).catch(function(err) { console.log(err.response || err) })
   // }
 }
-
-module.exports = Client
