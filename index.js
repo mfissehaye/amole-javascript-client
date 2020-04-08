@@ -19,7 +19,7 @@ module.exports = function(options) {
     // this.validate_card= this.service_client.validate_card
     // this.verify_otp= this.service_client.verify_otp
 
-    this.sale = payment_client.pay('01')
+    this.pay = payment_client.pay('01')
     // this.deposit= this.payment_client.pay('02')
     // this.refund= this.payment_client.pay('03')
     // this.cash_sale= this.payment_client.pay('04')

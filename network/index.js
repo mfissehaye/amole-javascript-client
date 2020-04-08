@@ -1,94 +1,54 @@
 const axios = require('axios')
-const _merge = require('lodash.merge')
-const _get = require('lodash.get')
-const js2xml = require('js2xmlparser')
 const _isNil = require('lodash.isnil')
-const xml2js = require('xml2js').Parser().parseStringPromise
-// const { service_url, payment_url, FettanMerchantID, common_config, PIN } = require('../config')
-
-const process_xml_response = function(xml) {
-  console.log('Received: ', xml)
-  const { TransActionData: {Acknowledge, ErrorCode, LongMessage, ReferenceNumber, ResponseID, ServiceResponse, ShortMessage, SourceTransID, TimeStamp}} = xml
-  if(_get(Acknowledge, '0', 'Failure') === 'Failure') {
-    const status = _get(ErrorCode, '0', null)
-    const message = _get(LongMessage, '0', null)
-    return Promise.reject(new Error(`status: ${status} : ${message}`))
-  }
-  return null
-}
 
 module.exports = function(options) {
   options = _isNil(options) ? {} : options
-  var FettanMerchantID = options.merchant_id || ''
+  var merchant_id = options.merchant_id || ''
+  var base_url = 'http://prod.api.myamole.com:8075/amole'
+  var api_signature = options.api_signature || ''
+  var ip_address = options.ip_address || ''
+  var username = options.username || ''
+  var password = options.password || ''
 
-  var base_url = 'https://api.myamole.com'
-  var uat = options.environment !== 'production' ? 'UAT' : ''
-  var service_url = `${base_url}/Service${uat}/FettanSVC.svc/api/FettanSVC`
-  this.payment_url = `${base_url}/Payment${uat}/FettanPay.svc/api/FettanPay`
-
-  this.common_config = {
-    APISignature: options.api_signature || '',
-    IPAddress: options.ip_address || '',
-    Username: options.username || '',
-    Password: options.password || '',
+  var headers = {
+    HDR_Signature: api_signature,
+    HDR_IPAddress: ip_address,
+    HDR_UserName: username,
+    HDR_Password: password,
+    Accept: 'application/json',
+    'Content-Type': 'application/json'
   }
 
-  this.pay = function (CardNumber, Amount, PIN, PaymentAction, SourceTransID, ExpirationDate, OrderDescription, SourceTransactionID) {
-    const params = _merge(this.common_config, {
-      CardNumber,
-      Amount,
-      PIN,
-      FettanMerchantID,
-      SourceTransID,
-      PaymentAction,
-      ExpirationDate,
-      OrderDescription,
-      SourceTransactionID
-    })
-    return axios.get(this.payment_url, { params: params })
-        .catch(function(err) { console.log(err.response || err) })
+  this.pay = function (phone, amount, pin, payment_action, expiration_date, description, source_transaction_id, vendor_account, additional_info_1) {
+    var data = {
+      BODY_CardNumber: phone,
+      BODY_ExpirationDate: expiration_date,
+      BODY_PIN: pin,
+      BODY_PaymentAction: payment_action,
+      BODY_AmountX: amount,
+      BODY_AmoleMerchantID: merchant_id,
+      BODY_OrderDescription: description,
+      BODY_SourceTransactionID: source_transaction_id,
+      BODY_VendorAccount: vendor_account,
+      BODY_AdditionalInfo1: additional_info_1
+    }
+
+    return axios
+        .post(`${base_url}/pay`, data, {
+          headers: headers
+        }).then(response => console.log(response))
+        .catch(err => console.log(err))
   }
 
-  this.send_otp = function(phone_number, SourceTransID ) {
-    const data = _merge(this.common_config, {
-      ServiceRequest: {
-        Service: 'OTPSend',
-        MobileNumber: phone_number
-      },
-      SourceTransID
-    })
+  this.send_otp = function(phone, source_transaction_id ) {
+    var data = {
+      BODY_ServiceRequest: `<Service>GetCustomer</Service><KeyValue>${phone}</KeyValue>`,
+      BODY_SourceTransID: source_transaction_id
+    }
 
-    return axios.post(service_url, js2xml.parse('Fettan', data), {
-      headers: {
-        'Content-Type': 'application/xml',
-        'Accept': 'application/xml'
-      }
-    }).then(function (xml) {
-        xml2js(xml.data).then(process_xml_response)})
+    return axios.post(`${base_url}/service`, data, {
+      headers: headers
+    }).then(response => console.log(response))
+        .catch(err => console.log(err))
   }
-
-  // this.service = function (PaymentAction, Amount, CardNumber, SourceTransID, ExpirationDate , OrderDescription, SourceTransactionID) {
-  //   const data = {
-  //     Header: this.common_config,
-  //     ServiceRequest: {
-  //       PIN,
-  //       FettanMerchantID,
-  //       Amount,
-  //       CardNumber,
-  //       SourceTransID,
-  //       PaymentAction,
-  //       ExpirationDate,
-  //       OrderDescription,
-  //       SourceTransactionID
-  //     }
-  //   }
-  //
-  //   console.log('Sending request to ', service_url, ' with data ', js2xml.parse('Fettan', data))
-  //   // convert data to xml format before sending
-  //   return axios.post(service_url, js2xml.parse('Fettan', data), {
-  //     headers: {
-  //       'Content-Type': 'text/xml'
-  //     }
-  //   }).catch(function(err) { console.log(err.response || err) })
-  // }
 }

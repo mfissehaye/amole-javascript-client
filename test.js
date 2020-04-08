@@ -9,5 +9,9 @@ const client = new AmoleClient( {
     "password": "D2KmWL97-Dtx"
 })
 
-client.send_otp('0973053999')
-// client.sale('0973053999', '20', '6997')
+try {
+    client.send_otp('0973053999')
+    // client.sale('0973053999', '20', '6997')
+} catch(_) {
+    console.log(_)
+}
