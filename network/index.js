@@ -36,11 +36,11 @@ module.exports = function(options) {
     return axios
         .post(`${base_url}/pay`, data, {
           headers: headers
-        }).then(response => console.log(response))
-        .catch(err => console.log(err))
+        }).then(response => console.log(response.data))
   }
 
   this.send_otp = function(phone, source_transaction_id ) {
+    console.log('Using headers: ', headers)
     var data = {
       BODY_ServiceRequest: `<Service>GetCustomer</Service><KeyValue>${phone}</KeyValue>`,
       BODY_SourceTransID: source_transaction_id
@@ -48,7 +48,6 @@ module.exports = function(options) {
 
     return axios.post(`${base_url}/service`, data, {
       headers: headers
-    }).then(response => console.log(response))
-        .catch(err => console.log(err))
+    }).then(response => console.log(response.data))
   }
 }
