@@ -4,7 +4,8 @@ const _isNil = require('lodash.isnil')
 module.exports = function(options) {
   options = _isNil(options) ? {} : options
   var merchant_id = options.merchant_id || ''
-  var base_url = 'http://prod.api.myamole.com:8075/amole'
+  var uat = options.uat || false
+  var base_url = uat ? 'http://uat.api.myamole.com:10080/amole' : 'http://prod.api.myamole.com:8075/amole'
   var api_signature = options.api_signature || ''
   var ip_address = options.ip_address || ''
   var username = options.username || ''
@@ -16,11 +17,12 @@ module.exports = function(options) {
     HDR_UserName: username,
     HDR_Password: password,
     Accept: 'application/json',
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/x-www-form-urlencoded'
   }
 
   this.pay = function (phone, amount, pin, payment_action, expiration_date, description, source_transaction_id, vendor_account, additional_info_1) {
-    var data = {
+    console.log(`Phone ${phone} amount ${amount} pin ${pin}`)
+    var params = {
       BODY_CardNumber: phone,
       BODY_ExpirationDate: expiration_date,
       BODY_PIN: pin,
@@ -33,6 +35,10 @@ module.exports = function(options) {
       BODY_AdditionalInfo1: additional_info_1
     }
 
+    var data = Object.entries(params)
+        .map(([key, val]) => `${key}=${encodeURIComponent(val)}`)
+        .join('&')
+
     return axios
         .post(`${base_url}/pay`, data, {
           headers: headers
@@ -40,11 +46,14 @@ module.exports = function(options) {
   }
 
   this.send_otp = function(phone, source_transaction_id ) {
-    console.log('Using headers: ', headers)
-    var data = {
-      BODY_ServiceRequest: `<Service>GetCustomer</Service><KeyValue>${phone}</KeyValue>`,
+    var params = {
+      BODY_ServiceRequest: `<Service>OTPSend</Service><KeyValue>${phone}</KeyValue>`,
       BODY_SourceTransID: source_transaction_id
     }
+
+    var data = Object.entries(params)
+        .map(([key, val]) => `${key}=${encodeURIComponent(val)}`)
+        .join('&')
 
     return axios.post(`${base_url}/service`, data, {
       headers: headers
