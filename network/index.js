@@ -21,7 +21,6 @@ module.exports = function(options) {
   }
 
   this.pay = function (phone, amount, pin, payment_action, expiration_date, description, source_transaction_id, vendor_account, additional_info_1) {
-    console.log(`Phone ${phone} amount ${amount} pin ${pin}`)
     var params = {
       BODY_CardNumber: phone,
       BODY_ExpirationDate: expiration_date,
@@ -42,7 +41,12 @@ module.exports = function(options) {
     return axios
         .post(`${base_url}/pay`, data, {
           headers: headers
-        }).then(response => console.log(response.data))
+        }).then(response => {
+          const data = response.data
+          if(data && data[0].HDR_Acknowledge === 'Failure')
+            throw new Error(data.MSG_LongMessage)
+          return data
+        })
   }
 
   this.send_otp = function(phone, source_transaction_id ) {
@@ -57,6 +61,11 @@ module.exports = function(options) {
 
     return axios.post(`${base_url}/service`, data, {
       headers: headers
-    }).then(response => console.log(response.data))
+    }).then(response => {
+      const data = response.data
+      if(data && data[0].HDR_Acknowledge === 'Failure')
+        throw new Error(data.MSG_LongMessage)
+      return data
+    })
   }
 }
