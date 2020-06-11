@@ -45,7 +45,7 @@ module.exports = function(options) {
           const data = response.data
           if(data && data[0].HDR_Acknowledge === 'Failure')
             throw new Error(data.MSG_LongMessage)
-          return data
+          return data[0]
         })
   }
 
@@ -64,8 +64,8 @@ module.exports = function(options) {
     }).then(response => {
       const data = response.data
       if(data && data[0].HDR_Acknowledge === 'Failure')
-        throw new Error(data.MSG_LongMessage)
-      return data
+        return new Error(data.MSG_LongMessage)
+      return data[0]
     })
   }
 }

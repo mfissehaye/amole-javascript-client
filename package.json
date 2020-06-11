@@ -1,7 +1,7 @@
 {
   "name": "amole-javascript-client",
   "description": "Javascript client for Amole payment API",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
